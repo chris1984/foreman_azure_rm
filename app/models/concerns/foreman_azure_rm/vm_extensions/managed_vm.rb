@@ -62,16 +62,23 @@ module ForemanAzureRm
 
       def marketplace_image_plan(image)
         image_type, image_id = image.split('://')
-        return nil unless image_type == 'marketplace' && image_id.include?('byos')
+        return nil unless image_type == 'marketplace'
         urn = image_id.split(':')
         publisher = urn[0]
         offer     = urn[1]
         sku       = urn[2]
         version   = urn[3]
+        resolved_version = if version == 'latest'
+                             sdk.list_versions(region, publisher, offer, sku).map(&:name).last
+                           else
+                             version
+                           end
+        marketplace_image = sdk.get_marketplace_image(region, publisher, offer, sku, resolved_version)
+        return nil unless marketplace_image&.plan
         image_plan = ComputeModels::PurchasePlan.new
-        image_plan.publisher = publisher.downcase
-        image_plan.name = sku.downcase
-        image_plan.product = offer.downcase
+        image_plan.publisher = marketplace_image.plan.publisher
+        image_plan.name = marketplace_image.plan.name
+        image_plan.product = marketplace_image.plan.product
         image_plan
       end
 
