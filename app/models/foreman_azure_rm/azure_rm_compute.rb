@@ -154,6 +154,27 @@ module ForemanAzureRm
         _("%{vm_size} VM Size") % {:vm_size => vm_size}
     end
 
+    def attributes
+      {
+        'id'                 => id,
+        'name'               => name,
+        'vm_size'            => vm_size,
+        'platform'           => platform,
+        'resource_group'     => resource_group,
+        'location'           => azure_vm.location,
+        'state'              => state,
+        'public_ip_address'  => public_ip_address,
+        'private_ip_address' => private_ip_address,
+        'image_uuid'         => image_uuid,
+        'os_disk_name'       => azure_vm.storage_profile.os_disk.name,
+        'os_disk_size_gb'    => os_disk_size_gb,
+        'os_disk_caching'    => os_disk_caching,
+        'storage_account_type' => premium_os_disk,
+        'data_disk_count'    => data_disks.size,
+        'tags'               => azure_vm.tags,
+      }
+    end
+
     # Following properties are for AzureRm
     # These are not part of Foreman's interface
 
