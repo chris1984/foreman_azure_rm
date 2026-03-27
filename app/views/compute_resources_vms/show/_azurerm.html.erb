@@ -1,4 +1,4 @@
-<% title @vm.azure_vm.name %>
+<% title @vm.name %>
 <div class='col-md-12'>
   <table class="<%= table_css_classes %>">
     <thead>
@@ -15,11 +15,11 @@
       </tr>
       <tr>
         <td><%= _('Location') %></td>
-        <td><%= @vm.azure_vm.location %></td>
+        <td><%= @vm.location %></td>
       </tr>
       <tr>
         <td><%= _('Platform') %></td>
-        <td><%= @vm.azure_vm.storage_profile.os_disk.os_type %></td>
+        <td><%= @vm.platform %></td>
       </tr>
       <tr>
         <td><%= _('State') %></td>
@@ -47,7 +47,7 @@
     <tbody>
       <tr>
         <td><%= _('OS Disk Name') %></td>
-        <td><%= @vm.azure_vm.storage_profile.os_disk.name %></td>
+        <td><%= @vm.os_disk_name %></td>
       </tr>
       <tr>
         <td><%= _('OS Disk Size (GB)') %></td>
@@ -98,28 +98,19 @@
       </tr>
       </thead>
       <tbody>
-        <% @vm.interfaces.each do |nic| %>
-          <% nic.ip_configurations.each do |config| %>
-            <tr>
-              <td><%= nic.name %></td>
-              <td><%= config.private_ipaddress %></td>
-              <td>
-                <% if config.public_ipaddress.present? %>
-                  <% ip_id = config.public_ipaddress.id %>
-                  <% ip_rg = ip_id.split('/')[4] %>
-                  <% ip_name = ip_id.split('/')[-1] %>
-                  <%= @vm.sdk.public_ip(ip_rg, ip_name).ip_address %>
-                <% end %>
-              </td>
-              <td><%= config.primary ? _('Yes') : _('No') %></td>
-            </tr>
-          <% end %>
+        <% @vm.network_interface_details.each do |detail| %>
+          <tr>
+            <td><%= detail.nic_name %></td>
+            <td><%= detail.private_ip %></td>
+            <td><%= detail.public_ip %></td>
+            <td><%= detail.primary ? _('Yes') : _('No') %></td>
+          </tr>
         <% end %>
       </tbody>
     </table>
   <% end %>
 
-  <% if @vm.azure_vm.tags.present? %>
+  <% if @vm.vm_tags.present? %>
     <table class="<%= table_css_classes %>">
       <thead>
       <tr>
@@ -128,7 +119,7 @@
       </tr>
       </thead>
       <tbody>
-        <% @vm.azure_vm.tags.each do |key, value| %>
+        <% @vm.vm_tags.each do |key, value| %>
           <tr>
             <td><%= key %></td>
             <td><%= value %></td>

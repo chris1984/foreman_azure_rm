@@ -154,25 +154,36 @@ module ForemanAzureRm
         _("%{vm_size} VM Size") % {:vm_size => vm_size}
     end
 
-    def attributes
-      {
-        'id'                 => id,
-        'name'               => name,
-        'vm_size'            => vm_size,
-        'platform'           => platform,
-        'resource_group'     => resource_group,
-        'location'           => azure_vm.location,
-        'state'              => state,
-        'public_ip_address'  => public_ip_address,
-        'private_ip_address' => private_ip_address,
-        'image_uuid'         => image_uuid,
-        'os_disk_name'       => azure_vm.storage_profile.os_disk.name,
-        'os_disk_size_gb'    => os_disk_size_gb,
-        'os_disk_caching'    => os_disk_caching,
-        'storage_account_type' => premium_os_disk,
-        'data_disk_count'    => data_disks.size,
-        'tags'               => azure_vm.tags,
-      }
+    def network_interface_details
+      interfaces.flat_map do |nic|
+        nic.ip_configurations.map do |config|
+          public_ip = nil
+          if config.public_ipaddress.present?
+            ip_id   = config.public_ipaddress.id
+            ip_rg   = ip_id.split('/')[4]
+            ip_name = ip_id.split('/')[-1]
+            public_ip = sdk.public_ip(ip_rg, ip_name).ip_address
+          end
+          OpenStruct.new(
+            nic_name:   nic.name,
+            private_ip: config.private_ipaddress,
+            public_ip:  public_ip,
+            primary:    config.primary
+          )
+        end
+      end
+    end
+
+    def location
+      @azure_vm.location
+    end
+
+    def os_disk_name
+      @azure_vm.storage_profile.os_disk.name
+    end
+
+    def vm_tags
+      @azure_vm.tags
     end
 
     # Following properties are for AzureRm
